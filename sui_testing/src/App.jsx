@@ -59,18 +59,19 @@ export default function App() {
   async function createDstEscrow() {
     if (!currentAccount) return setStatus("Connect wallet first");
     setStatus("Creating destination escrow…");
+    const hashBytes = Array.from(keccak_256.array(preimage));
     const tx = new Transaction();
     const [coin] = tx.splitCoins(tx.gas, [tx.pure(BigInt(amount * 1e9))]);
     tx.moveCall({
       target: `${PACKAGE_ID}::fusion_contract::create_dst_escrow`,
       arguments: [
-        tx.pure(Array.from(new TextEncoder().encode(secretHash))),
-        tx.pure(BigInt(amount * 1e9)),
-        tx.pure(BigInt(minSwap * 1e9)),
-        tx.pure(BigInt(timelock)),
-        coin,
-        tx.pure(currentAccount.address),
         tx.object(STORE_ID),
+        tx.pure.vector("u8", hashBytes),
+        tx.pure("u64", BigInt(amount * 1e9)),
+        tx.pure("u64", BigInt(minSwap * 1e9)),
+        tx.pure("u64", BigInt(timelock)),
+        coin,
+        tx.pure("address", currentAccount.address),
       ],
     });
     try {
@@ -133,13 +134,7 @@ export default function App() {
         <h1 className="text-xl text-blue-600 font-bold mb-4">
           Escrow Factory Demo
         </h1>
-        {/* <input
-          type="text"
-          placeholder="Secret hash (32-byte hex)"
-          value={secretHash}
-          onChange={(e) => setSecretHash(e.target.value)}
-          className="w-full mb-2 p-2 border rounded"
-        /> */}
+
         <input
           type="text"
           placeholder="Preimage"
