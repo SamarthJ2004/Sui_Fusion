@@ -6,7 +6,7 @@ libs = ['contracts/lib']
 
 via_ir = true
 optimizer_runs = 1000000
-eth-rpc-url = "https://rpc.sepolia.org"
+eth-rpc-url = "https://eth-sepolia.g.alchemy.com/public"
 
 fs_permissions = [
   { access = "read", path = "dist/contracts" },
@@ -16,4 +16,4 @@ fs_permissions = [
 extra_output = ['storageLayout']
 
 [rpc_endpoints]
-sepolia = "https://rpc.sepolia.org"
+sepolia = "https://eth-sepolia.g.alchemy.com/public"

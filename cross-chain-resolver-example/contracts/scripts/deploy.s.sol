@@ -45,9 +45,3 @@ contract DeployScript is Script {
         console.log('Resolver deployed at:', resolver);
     }
 }
-
-// contract SimpleDeployScript is Script {
-//     function run() public {
-//         console.log("Hello from Forge script!");
-//     }
-// }
