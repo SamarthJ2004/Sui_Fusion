@@ -1,0 +1,15 @@
+{
+  "secret_hash": "ecadbf265b2727e592c0fd0cbaf59720264939af3aa7b4dc82b1efa1515ce1d7",  
+  "secret": "my top secret",
+  "intent_announcer": "0xSuiUser",
+  "chain_src": "sui",
+  "chain_dst": "ethereum",
+  "token_src": "0xSUI",
+  "token_dst": "0xWETH",
+  "amount_src": "1000",
+  "min_swap_amount": "5000000000000",
+  "timelock": 1730000000000,
+  "src_escrow_status": "pending",
+  "dst_escrow_status": "pending",
+  "status": "created"
+}

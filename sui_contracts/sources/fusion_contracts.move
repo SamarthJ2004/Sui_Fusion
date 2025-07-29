@@ -1,6 +1,6 @@
 #[allow(lint(self_transfer))]
 module fusion_contracts::escrow_factory;
-use std::hash;
+use sui::hash;
 use sui::coin::{Self,Coin};
 use sui::sui::SUI;
 use sui::table::{Self, Table};
@@ -53,7 +53,7 @@ fun init(ctx: &mut TxContext) {
         src_escrows: table::new(ctx),
         dst_escrows: table::new(ctx),
     };
-    transfer::public_transfer(store, tx_context::sender(ctx));
+    transfer::public_share_object(store);
 }
 
 /// Storage initialised manually (for testing)
@@ -63,7 +63,7 @@ public fun create(ctx: &mut TxContext) {
         src_escrows: table::new(ctx),
         dst_escrows: table::new(ctx),
     };
-    transfer::public_transfer(store, tx_context::sender(ctx));
+    transfer::public_share_object(store);
 }
 
 /// Create source escrow: User funds are locked and the resolver receives the funds
@@ -155,7 +155,7 @@ public fun create_dst_escrow(
 
 /// Redeem funds given preimage: Src => Resolver, Dst => User
 public entry fun redeem(store: &mut EscrowStore, secret: vector<u8>, is_src: bool, _ctx: &mut TxContext) {
-    let secret_hash = hash::sha2_256(secret);
+    let secret_hash = hash::keccak256(&secret);
     let mut escrow = if (is_src) {
         assert!(store.src_escrows.contains(secret_hash), E_SRC_ESCROW_DOES_NOT_EXIST);
         table::remove(&mut store.src_escrows, secret_hash)
