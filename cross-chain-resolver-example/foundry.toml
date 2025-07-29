@@ -6,8 +6,14 @@ libs = ['contracts/lib']
 
 via_ir = true
 optimizer_runs = 1000000
-eth-rpc-url = 'http://localhost:8545'
+eth-rpc-url = "https://rpc.sepolia.org"
 
-fs_permissions = [{ access = "read", path = "dist/contracts" }, { access = "read-write", path = ".forge-snapshots/" }]
+fs_permissions = [
+  { access = "read", path = "dist/contracts" },
+  { access = "read-write", path = ".forge-snapshots/" },
+]
 
 extra_output = ['storageLayout']
+
+[rpc_endpoints]
+sepolia = "https://rpc.sepolia.org"
