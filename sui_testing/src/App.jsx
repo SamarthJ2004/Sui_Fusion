@@ -8,9 +8,9 @@ import {
 import { keccak_256 } from "js-sha3";
 
 const PACKAGE_ID =
-  "0xaf70d3e6690ba2803b94af7f157bbe3e42e5b604221703a9123fcd06b94162cb"; // replace with your package ID
+  "0x14c4082eede186b248ef8342db8d21168d9e1458b2878b169eff4f6861636f62"; // replace with your package ID
 const STORE_ID =
-  "0x229b24684ff60c77e067116dd800f2de8a919e736931b068cf470d1d093fbffc";
+  "0xa7ee9f1d691ac7c4e3dd9a2a03531a38024dc8485282a34844a52fec6f6752d8";
 
 const encoder = new TextEncoder();
 
@@ -31,6 +31,7 @@ export default function App() {
     const bytes = encoder.encode(preimage);
     setSecretHash(Array.from(bytes));
     const hashBytes = Array.from(keccak_256.array(preimage));
+    console.log("hashBytes", hashBytes);
     const tx = new Transaction();
     const [coin] = tx.splitCoins(tx.gas, [
       tx.pure("u64", BigInt(amount * 1e9)),
@@ -61,7 +62,9 @@ export default function App() {
     setStatus("Creating destination escrow…");
     const hashBytes = Array.from(keccak_256.array(preimage));
     const tx = new Transaction();
-    const [coin] = tx.splitCoins(tx.gas, [tx.pure(BigInt(amount * 1e9))]);
+    const [coin] = tx.splitCoins(tx.gas, [
+      tx.pure("u64", BigInt(amount * 1e9)),
+    ]);
     tx.moveCall({
       target: `${PACKAGE_ID}::fusion_contract::create_dst_escrow`,
       arguments: [
