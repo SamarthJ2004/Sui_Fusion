@@ -1,3 +1,4 @@
+"use client"
 import React, { useState } from "react";
 import {
   useCurrentAccount,
@@ -9,9 +10,9 @@ import {
   createDstEscrow,
   redeemEscrow,
   refundEscrow,
-} from "../sui_utils/sui";
+} from "../lib/sui";
 
-export default function Working() {
+const Working = () => {
   const currentAccount = useCurrentAccount();
   const { mutateAsync: signAndExecuteTransactionBlock } =
     useSignAndExecuteTransaction();
@@ -29,7 +30,7 @@ export default function Working() {
         <div className="flex justify-end mb-4">
           <ConnectButton
             connectText="Connect Wallet"
-            connectedText={`Connected: ${currentAccount?.address.slice(0, 6)}…`}
+            // connectedText={`Connected: ${currentAccount?.address.slice(0, 6)}…`}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg"
           />
         </div>
@@ -150,3 +151,5 @@ export default function Working() {
     </div>
   );
 }
+
+export default Working;
