@@ -5,7 +5,7 @@ const router = Router();
 router.get('/', async (req, res) => {
   const { secret_hash } = req.query;
   const { data, error } = await supabase
-    .from('Relayer_Data')
+    .from('Adv_Relayer_Data')
     .select('secret, status')
     .eq('secret_hash', secret_hash)
     .single();
@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
   }
   console.log(`Secret : ${data.secret} for secret hash: ${secret_hash}`);
   res.json({ secret: data.secret });
-  await supabase.from("Relayer_Data").update({status: "secret_revealed"}).eq("secret_hash", secret_hash);
+  await supabase.from("Adv_Relayer_Data").update({status: "secret_revealed"}).eq("secret_hash", secret_hash);
 });
 
 export default router;

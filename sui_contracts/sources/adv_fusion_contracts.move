@@ -1,6 +1,6 @@
 #[allow(lint(self_transfer))]
 module fusion_contracts::adv_escrow_factory;
-use std::hash;
+use sui::hash;
 use sui::coin::{Self,Coin};
 use sui::sui::SUI;
 use sui::table::{Self, Table};
@@ -80,7 +80,7 @@ fun init(ctx: &mut TxContext) {
         src_escrows: table::new(ctx),
         dst_escrows: table::new(ctx),
     };
-    transfer::share_object(store);
+    transfer::public_share_object(store);
 }
 
 /// Storage initialised manually (for testing)
@@ -92,7 +92,7 @@ public fun create(ctx: &mut TxContext) {
         src_escrows: table::new(ctx),
         dst_escrows: table::new(ctx),
     };
-    transfer::share_object(store);
+    transfer::public_share_object(store);
 }
 
 /// the resolver places a new order for partial‐fill swaps
@@ -220,7 +220,7 @@ public fun create_src_escrow(
 /// Redeem funds given preimage: Src => Resolver, Dst => User
 /// the share is 0-100 and to be passed by the relayer
 public entry fun redeem(store: &mut EscrowStore, secret: vector<u8>, is_src: bool, share: u64, ctx: &mut TxContext) {
-    let secret_hash = hash::sha2_256(secret);
+    let secret_hash = hash::keccak256(&secret);
 
     if (is_src) {
         assert!(store.src_escrows.contains(secret_hash), E_SRC_ESCROW_DOES_NOT_EXIST);
