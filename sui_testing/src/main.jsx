@@ -1,6 +1,7 @@
 // src/index.jsx
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "@mysten/dapp-kit/dist/index.css";
 import "./index.css";
@@ -22,7 +23,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <QueryClientProvider client={queryClient}>
       <SuiClientProvider networks={networks} defaultNetwork="devnet">
         <WalletProvider autoConnect>
-          <App />
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>
