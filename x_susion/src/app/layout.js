@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import Navbar from '@/components/Navbar';
+import "@mysten/dapp-kit/dist/index.css";
 
 const queryClient = new QueryClient();
 
@@ -21,13 +22,15 @@ const networks = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>
+      <body className='bg-black w-full h-full'>
         <QueryClientProvider client={queryClient}>
           <SuiClientProvider networks={networks} defaultNetwork="devnet">
             <WalletProvider autoConnect>
-              <div className="flex flex-col bg-gray-600 w-[1200px] m-auto rounded-3xl">
-                <Navbar />
-                <main className="p-8">{children}</main>
+              <div className="items-center justify-start py-8">
+                <div className="flex flex-col bg-gray-600 w-full max-w-6xl mx-auto rounded-3xl relative">
+                  <Navbar />
+                  <main className="p-8">{children}</main>
+                </div>
               </div>
             </WalletProvider>
           </SuiClientProvider>

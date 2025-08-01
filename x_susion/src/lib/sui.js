@@ -13,15 +13,13 @@ export async function createSrcEscrow({
   amount,
   minSwap,
   timelock,
-  setSecretHash,
   setStatus,
   signAndExecuteTransactionBlock,
 }) {
   if (!currentAccount) return setStatus("Connect wallet first");
   setStatus("Creating source escrow…");
   const hashBytes = Array.from(keccak_256.array(preimage));
-  setSecretHash(hashBytes);
-
+  
   const tx = new Transaction();
   const [coin] = tx.splitCoins(tx.gas, [
     tx.pure("u64", BigInt(amount * 1e9)),

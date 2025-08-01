@@ -1,5 +1,5 @@
-import Working from '@/components/Working';
+import SwapPage from '@/components/SwapPage';
 
 export default function Home() {
-  return <Working />;
+  return <SwapPage />;
 }

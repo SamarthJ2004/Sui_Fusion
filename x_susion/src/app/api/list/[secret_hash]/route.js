@@ -2,7 +2,8 @@
 import { supabase } from '@/lib/supabase';
 
 export async function GET(request, { params }) {
-  const { secret_hash } = params;
+  const { secret_hash } = await params;
+  console.log("secret: ",secret_hash);
 
   const { data, error } = await supabase
     .from('Relayer_Data')
