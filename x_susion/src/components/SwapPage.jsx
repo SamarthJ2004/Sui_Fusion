@@ -1,10 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import Navbar from "./Navbar";
 
 const tokens = {
   sui: [{ symbol: "SUI", name: "Sui", price: 100 }],
-  ethereum: [{ symbol: "ETH", name: "Ethereum", price: 3000 }],
+  ethereum: [{ symbol: "ETH", name: "Ethereum", price: 300 }],
 };
 
 const SwapPage = () => {
@@ -66,6 +67,8 @@ const SwapPage = () => {
   }
 
   return (
+    <>
+    <Navbar src_chain={fromChain}/>
     <div className="bg-gray-900 text-white p-4">
       <div className="max-w-md mx-auto">
         {/* Header */}
@@ -232,6 +235,7 @@ const SwapPage = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

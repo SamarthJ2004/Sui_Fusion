@@ -174,8 +174,7 @@ public entry fun redeem(store: &mut EscrowStore, secret: vector<u8>, is_src: boo
 
     event::emit(Redeemed{id: object::id(&escrow), secret_hash, is_src:true, taker});
 
-    let Escrow {id  ,coins, min_swap_amount,..} = escrow;
-    assert!(!(min_swap_amount <= coin::value(&coins)), E_ORDER_NOT_FULLFILLED);
+    let Escrow {id  ,coins,..} = escrow;
     id.delete();
     transfer::public_transfer(coins, taker);
 }

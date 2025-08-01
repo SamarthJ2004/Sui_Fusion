@@ -1,11 +1,11 @@
-// src/app/layout.js
-"use client"
+"use client";
 import './globals.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import Navbar from '@/components/Navbar';
 import "@mysten/dapp-kit/dist/index.css";
+import { usePathname } from 'next/navigation';
 
 const queryClient = new QueryClient();
 
@@ -14,12 +14,9 @@ const networks = {
   mainnet: { url: getFullnodeUrl('mainnet') },
 };
 
-// export const metadata = {
-//   title: 'Your Sui dApp',
-//   description: 'Built with Next.js App Router',
-// };
-
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+
   return (
     <html lang="en">
       <body className='bg-black w-full h-full'>
@@ -28,7 +25,7 @@ export default function RootLayout({ children }) {
             <WalletProvider autoConnect>
               <div className="items-center justify-start py-8">
                 <div className="flex flex-col bg-gray-600 w-full max-w-6xl mx-auto rounded-3xl relative">
-                  <Navbar />
+                  {pathname !== '/' && <Navbar />}
                   <main className="p-8">{children}</main>
                 </div>
               </div>
