@@ -33,7 +33,7 @@ export const config = {
                     donor: '0x4a9973aD4DbB8A968ca5A5c8d2b13937dEB0f928'
                 }
             }
-        },
+        }, 
         destination: {
             chainId: Sdk.NetworkEnum.ETHEREUM,
             url: fromEnv.SRC_CHAIN_RPC,

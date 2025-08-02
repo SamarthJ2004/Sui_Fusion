@@ -30,7 +30,7 @@ const suiAddressUser = suiKeypairUser.getPublicKey().toSuiAddress();
 export async function createSrcEscrow({
     preimage,
 }) {
-    setStatus("Creating source escrow…");
+    console.log("Creating source escrow…");
     const hashBytes = hexToU8Vector(keccak256(toUtf8Bytes(preimage)));
 
     const tx = new Transaction();
@@ -45,7 +45,7 @@ export async function createSrcEscrow({
             tx.pure.vector("u8", hashBytes),
             tx.pure("u64", BigInt(4 * 1e9)),
             tx.pure("u64", BigInt(2 * 1e9)),
-            tx.pure("u64", BigInt(timelock)),
+            tx.pure("u64", BigInt(52653)),
             coin,
             tx.pure("address", suiAddressUser),
         ],
@@ -81,7 +81,7 @@ export async function createDstEscrow({preimage}) {
             tx.pure.vector("u8", hashBytes),
             tx.pure("u64", BigInt(2 * 1e9)),
             tx.pure("u64", BigInt(4 * 1e9)),
-            tx.pure("u64", BigInt(45676543)),
+            tx.pure("u64", BigInt(15)),
             coin,
             tx.pure("address", suiAddressUser),
         ],
@@ -125,27 +125,31 @@ export async function redeemEscrow({
 }
 
 export async function refundEscrow({
-    currentAccount,
+    // currentAccount,
     secretHash,
-    setStatus,
-    signAndExecuteTransactionBlock,
+    // setStatus,
+    // signAndExecuteTransactionBlock,
 }) {
-    if (!currentAccount) return setStatus("Connect wallet first");
-    setStatus("Refunding escrow…");
+    // if (!currentAccount) return setStatus("Connect wallet first");
+    console.log("Refunding escrow…");
+    const hashBytes = Array.from(encoder.encode(secretHash));
 
     const tx = new Transaction();
     tx.moveCall({
         target: `${PACKAGE_ID}::escrow_factory::refund`,
         arguments: [
             tx.object(STORE_ID),
-            tx.pure.vector("u8", secretHash),
+            tx.pure.vector("u8", hashBytes),
         ],
     });
 
-    try {
-        await signAndExecuteTransactionBlock({ transaction: tx });
-        setStatus("Refunded successfully.");
-    } catch (e) {
-        setStatus("Error: " + e.message);
-    }
+    const res = await suiClient.signAndExecuteTransaction({
+        signer: suiKeypairResolver,
+        transaction: tx,
+        options: { showEffects: true, showObjectChanges: true },
+    });
+
+     console.log('Refund Successful:', res);
+    return res;
+
 }

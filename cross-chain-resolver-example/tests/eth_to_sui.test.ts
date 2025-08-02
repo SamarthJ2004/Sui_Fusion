@@ -20,10 +20,10 @@ import {
 } from 'ethers'
 import { uint8ArrayToHex, UINT_40_MAX } from '@1inch/byte-utils'
 import assert from 'node:assert';
-import { ChainConfig, config } from './config.js'
-import { Wallet } from './wallet.js'
-import { Resolver } from './resolver.js'
-import { EscrowFactory } from './escrow-factory.js'
+import { ChainConfig, config } from './config.ts'
+import { Wallet } from './wallet.ts'
+import { Resolver } from './resolver.ts'
+import { EscrowFactory } from './escrow-factory.ts'
 import factoryContract from '../dist/contracts/TestEscrowFactory.sol/TestEscrowFactory.json'
 import resolverContract from '../dist/contracts/Resolver.sol/Resolver.json'
 
