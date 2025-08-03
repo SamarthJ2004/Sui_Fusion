@@ -148,7 +148,7 @@ forge script script/Deploy.s.sol --rpc-url <RPC_URL> --broadcast
 
 ### 5.4 Supabase Database
 
-create table if not exists "Relayer_Data" (
+```create table if not exists "Relayer_Data" (
   secret_hash text primary key,
   secret text not null,
   intent_announcer text not null,
@@ -168,8 +168,9 @@ create table if not exists "Relayer_Data" (
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
+```
 
-
+```
 create table if not exists "Adv_Relayer_Data" (
   secret_hash text primary key,
   secret text not null,
@@ -192,6 +193,7 @@ create table if not exists "Adv_Relayer_Data" (
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
+```
 
 ---
 
