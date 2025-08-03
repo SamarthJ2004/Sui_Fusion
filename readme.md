@@ -148,7 +148,8 @@ forge script script/Deploy.s.sol --rpc-url <RPC_URL> --broadcast
 
 ### 5.4 Supabase Database
 
-```create table if not exists "Relayer_Data" (
+```
+create table if not exists "Relayer_Data" (
   secret_hash text primary key,
   secret text not null,
   intent_announcer text not null,
