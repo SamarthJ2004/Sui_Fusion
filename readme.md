@@ -1,244 +1,178 @@
-# 1Inch Fusion+ → Sui Cross‑Chain Swap Extension
+# Cross-Chain HTLC Swap: Sui & Ethereum (Fusion+ Extension)
 
-This repository contains an extension to 1inch Fusion+ that enables atomic, HTLC‑based cross‑chain swaps between Ethereum (EVM) and Sui (Move) blockchains. It provides:
-
-* **Ethereum HTLC** smart contract (Solidity) for ERC‑20 token locking.
-* **Sui HTLC** Move contracts for native SUI (or any Coin<T>, later) locking.
-* **Relayer** service (Node.js/TypeScript) to watch events and forward preimages.
-* **Frontend UI** React for initiating and monitoring swaps.
-
----
+<p align="center">
+  <img width="300" height="300" alt="Logo" src="https://github.com/user-attachments/assets/bffa977d-ad72-4bfc-97c3-897a32d713f2" />
+</p>
 
 ## Table of Contents
 
-1. [Architecture Overview](#architecture-overview)
-2. [Prerequisites](#prerequisites)
-3. [Setup & Configuration](#setup--configuration)
-4. Contracts
-    1. [Ethereum HTLC](#ethereum-htlc)
-    2. [Sui HTLC](#sui-htlc)
-5. [Relayer Service](#relayer-service)
-6. [Frontend UI](#optional-frontend-ui)
-7. [Testing on Testnets](#testing-on-testnets)
-8. [Deploying to Mainnet](#deploying-to-mainnet)
-9. [Swap Flows](#swap-flows)
-10. [Env Configuration](#env-configuration)
-11. [Future Improvements](#future-improvements)
+1. [Project Overview](#project-overview)
+2. [Core Concepts: HTLC](#core-concepts-htlc)
+3. [Architecture & Flow Diagrams](#architecture--flow-diagrams)
+4. [Contract Details](#contract-details)
+5. [Setup & Deployment](#setup--deployment)
+6. [Manual Testing Guide](#manual-testing-guide)
+8. [Future Work & Enhancements](#future-work--enhancements)
+9. [Contributing & License](#contributing--license)
 
 ---
 
-## Architecture Overview
+## 1. Project Overview
 
-```text
-[Browser UI]           [Relayer Service]        [Blockchains]
-     │                        │                        │
-     │ 1. Initiate Swap       │                        │
-     │───────────────────────▶│                        │
-     │                        │                        │
-     │                        │ 2a. Lock on Ethereum   │
-     │                        │───────────────────────▶│ Ethereum HTLC
-     │                        │                        │
-     │                        │   2b. Lock on Sui      │
-     │                        │───────────────────────▶│ Sui HTLC
-     │                        │                        │
-     │                        │ 3. Listen for redeem   │
-     │                        │    events & forward    │
-     │                        │    preimages           │
-     │                        │ ◀───────────────────────┤
-     │                        │                        │
-     │                        │ 4. Redeem counterpart  │
-     │                        │    contract            │
-     │                        │───────────────────────▶│
+This repository demonstrates a cross-chain atomic swap between the Sui blockchain (Move) and Ethereum (Solidity) using Hashed Timelock Contracts (HTLCs). It includes:
 
+* **On-Chain Components**: Sui `escrow_factory` Move module (simple swap and partial fills); Ethereum `TestEscrowFactory`, `Resolver`, and predeployed mainnet contracts for 1inch LOP and ERC20.
+* **Off-Chain Relayer**: A conceptual service to monitor events, propagate secrets, and manage timelock-based redemption/refund across chains.
+  
+---
+
+## 2. Core Concepts: HTLC
+
+HTLCs ensure atomicity via two primitives:
+
+* **Hashlock**: Locks funds behind a cryptographic hash (`secret_hash`). Revealing the preimage (`secret`) redeems the funds.
+* **Timelock**: Allows refunding locked funds after a deadline if the secret is not revealed.
+
+**Swap Flow**:
+
+For SUI -> ETH swap
+1. Maker announces his/her signed order with the secret to the relayer , which in turn the relayer annouces to all resolvers.
+1. Resolver locks maker Sui tokens → HTLC-A with `timelock_A`.
+2. Relayer locks Ethereum → HTLC-B with `timelock_B < timelock_A`.
+3. Relayer redeems HTLC-A (reveals `secret`).
+4. Realayer redeems HTLC-B for maker using revealed `secret`.
+
+If either party misses the window, they can refund their own HTLC after expiry.
+Similarly for ETH -> SUI swap
+
+---
+
+## 3. Architecture & Flow Diagrams
+
+### 3.1. High-Level Architecture
+
+```mermaid
+flowchart TB
+  subgraph Sui Chain
+    A(Maker) -->|create_src_escrow| B[escrow_factory]
+    B --> C[SrcEscrowCreated Event]
+  end
+  subgraph Off-Chain Relayer
+    C --> D[Event Listener]
+    D --> E[Relayer Logic]
+  end
+  subgraph Ethereum Chain
+    E -->|initiateDstSwap| F[Resolver.sol]
+    F --> G[TestEscrowFactory]
+    G --> H[DstEscrowCreated Event]
+  end
+  H --> D
+  D -->|secret| B
+  B -->|redeem| A
 ```
 
+### 3.2. Swap Timeline
+
+```mermaid
+timeline
+    title HTLC Timelock Sequence
+    2025-08-03 : Maker sets Sui timelock T_A = now + 60m
+    2025-08-03 : Relayer sets ETH timelock T_B = now + 30m
+    2025-08-03 : Relayer redeems on Sui (secret revealed by relayer)
+    2025-08-03 : Relayer redeems on Ethereum
+```
+
+This ensures Relayer always has time to reveal before their own funds unlock.
+
 ---
 
-## Prerequisites
+## 4. Contract Details
 
-* **Node.js**
-* **npm**
-* **pnpm**
-* **Forge**
-* **Sui CLI**
-* **Git**
+### 4.1. Sui Move Modules
+
+* **`escrow_factory for single fill swap`**: Handles `create_src_escrow`, `create_dst_escrow`, `redeem`, and `refund`. Emits events and enforces timelocks.
+* **`escrow_factory for partial fill swap`**: Handles `create_src_escrow`, `place_order`, `fill_order`, `create_dst_escrow`, `redeem`, and `refund`. Emits events and enforces timelocks.
+
+### 4.2. Ethereum Solidity Contracts
+
+* **`TestEscrowFactory.sol`**: Factory for per-swap `TestEscrow` contracts.
+* **`Resolver.sol`**: Orchestrates `initiateDstSwap`, `redeem`, and `refund`. Integrates mock 1inch LOP via `IOrderMixin`.
 
 ---
 
-## Setup & Configuration
+## 5. Setup & Deployment
 
-1. **Clone the repo**:
+### 5.1. Prerequisites
+
+* Git, Rust, Cargo (for move and sui tools)
+* Sui CLI
+* Foundry (`forge`, `anvil`)
+* Node.js & pnpm/npm/yarn (optional for frontend)
+
+### 5.2. Mainner for Ethereum and Devnet for Sui Networks
+
+1. **Start Sui**:
 
    ```bash
-   git clone https://github.com/your-org/fusion-sui-swap.git
-   cd fusion-sui-swap
+   To connect with the devnet:
+    1) sui client new-env --alias devnet --rpc https://fullnode.devnet.sui.io:443
+    2) sui client switch -env devnet
    ```
-
-2. **Install dependencies**:
+   
+2. **Start Ethereum**:
 
    ```bash
-   # Root
-   npm install
-
-   # Ethereum
-   cd ethereum
-   npm install
-
-   # Sui
-   cd ../sui
-   npm install
-
-   # Relayer
-   cd ../relayer
-   npm install
-
-   # Frontend (optional)
-   cd ../frontend
-   npm install
+    1) Create account on Tenderly
+    2) fork the chain on which you want to work on
+    3) save the RPC URL in env
+    4) Fund the wallets
    ```
 
-3. **Configure environment** (see [Env Configuration](#env-configuration)).
+### 5.3. Deploy Contracts
 
----
-
-## Ethereum HTLC
-
-Located in `ethereum/contracts/HTLC.sol`.
-
-### Features
-
-* Lock ERC‑20 tokens with `hashlock` and `timelock`.
-* `redeem(bytes32 preimage)` transfers to receiver and emits `Redeemed(preimage)`.
-* `refund()` returns tokens to sender after expiry.
-
-### Compile & Deploy
+#### Sui:
 
 ```bash
-cd ethereum
-npx hardhat compile
-npx hardhat run scripts/deploy-htlc.js --network goerli
+cd sui_contracts/fusion_contracts
+sui client publish --gas-budget 10000000  # escrow_factory
+```
+
+#### Ethereum:
+
+```bash
+cd ethereum_contracts
+forge install
+# Set PRIVATE_KEY & INITIAL_OWNER env vars
+forge script script/Deploy.s.sol --rpc-url <RPC_URL> --broadcast
 ```
 
 ---
 
-## Sui HTLC
+## 6. Manual Testing Guide
 
-Located in `sui/src/HTLC.move`.
+1) cross_chain_resolver_example folder (tests)
+    - pnpm i
+    - forge install
+    - pnpm test <TEST_PATH>
 
-### Features
+2) sui_contracts folder
+    - sui publish
 
-* `initialize(sender, receiver, hashlock, timelock, amount)` creates HTLC resource.
-* `redeem(preimage)` checks hash and transfers SUI; emits `PreimageRevealed`.
-* `refund()` returns SUI to sender after timelock.
-
-### Build & Publish
-
-```bash
-cd sui
-sui client publish
-```
+3) x_susion (Frontend)
+    - pnpm i
+    - pnpm run dev
 
 ---
 
-## Relayer Service
+## 8. Future Work & Enhancements
 
-Located in `relayer/`.
-
-### Responsibilities
-
-* Subscribe to Ethereum `Redeemed` events.
-* Subscribe to Sui `PreimageRevealed` events.
-* Call the counterparty contract’s `redeem(preimage)`.
-* Optionally call `refund()` after timelocks.
-
-### Run Locally
-
-```bash
-cd relayer
-npm run start
-```
+* Automated Relayer Service (Node.js)
+* Support additional Sui tokens (e.g., Coin<USDC>)
+* Decentralized relayer network with staking
+* Complete Frontend UI & UX
 
 ---
 
-## (Optional) Frontend UI
+## 9. Contributing & License
 
-Located in `frontend/` (Next.js).
-
-### Features
-
-* Connect both **Ethereum** and **Sui** wallets.
-* Initiate swaps with hashlock and timelock.
-* Monitor swap status, timers, and allow manual redeem/refund.
-
-### Start Dev Server
-
-```bash
-cd frontend
-npm run dev
-```
-
----
-
-## Testing on Testnets
-
-1. **Ethereum**: Goerli or Sepolia. Fund wallets with test ETH and test ERC‑20.
-2. **Sui**: Sui Devnet. Use faucet to get SUI.
-3. **Deploy** contracts on both chains:
-
-   * Ethereum: `npx hardhat run scripts/deploy-htlc.js --network goerli`
-   * Sui: `sui client publish`
-4. **Run Relayer** and **Frontend**, perform end-to-end swap:
-
-   * Initiate on one chain, respond on the other.
-
----
-
-## Deploying to Mainnet
-
-* Update **RPC endpoints** in `config.ts`.
-* Redeploy **Ethereum HTLC** on mainnet, and use real ERC‑20 addresses (e.g., USDC).
-* Publish **Sui HTLC** on Sui Mainnet.
-* Update **.env** for `FUSION_PLUS_API_KEY`, `RPC_URL`, contract addresses.
-* Run Relayer against mainnet endpoints.
-
----
-
-## Swap Flows
-
-### Ethereum → Sui (ETH first)
-
-1. Alice generates `P` & `H = hash(P)` off-chain.
-2. Alice locks tokens in Ethereum HTLC:
-
-   ```js
-   await htlcEth.initialize(bobSuiAddress, H, timelockEth, { value: amount });
-   ```
-3. Bob locks SUI in Sui HTLC using same `H` and `timelockSui < timelockEth`.
-4. Alice calls `redeem(P)` on Sui HTLC → emits `PreimageRevealed`.
-5. Relayer catches it → calls `redeem(P)` on Ethereum → completes swap.
-6. Refund paths kick in after expirations if needed.
-
-### Sui → Ethereum (SUI first)
-
-Same logic, roles reversed.
-
----
-
-## Env Configuration
-
-Copy `.env.example` to `.env` in each folder and fill in:
-
-* **ETH\_RPC\_URL**: Ethereum node URL
-* **SUI\_RPC\_URL**: Sui node URL
-* **PRIVATE\_KEY\_ETH**: Deployer wallet private key
-* **PRIVATE\_KEY\_SUI**: Sui wallet key
-* **FUSION\_PLUS\_API\_KEY**: (if using Fusion+ SDK)
-
----
-
-## Future Improvements
-
-* **Partial fills**: support multi‑redeem until balance is drained.
-* **On‑chain resolver**: integrate Wormhole or LayerZero for trustless messaging.
-* **UI enhancements**: gas estimators, swap quotes, analytics.
-* **Multi-relayer network**: redundancy and high availability.
+Licensed under MIT. See [LICENSE](LICENSE) for details.
