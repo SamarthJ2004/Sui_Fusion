@@ -146,6 +146,53 @@ forge install
 forge script script/Deploy.s.sol --rpc-url <RPC_URL> --broadcast
 ```
 
+### 5.4 Supabase Database
+
+create table if not exists "Relayer_Data" (
+  secret_hash text primary key,
+  secret text not null,
+  intent_announcer text not null,
+  chain_src text not null,
+  chain_dst text not null,
+  token_src text not null,
+  token_dst text not null,
+  amount_src text not null,
+  min_swap_amount text not null,
+  timelock bigint not null,
+  escrow_creator text,
+  src_escrow_id text,
+  dst_escrow_id text,
+  src_escrow_status text not null,
+  dst_escrow_status text not null,
+  status text not null,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+
+create table if not exists "Adv_Relayer_Data" (
+  secret_hash text primary key,
+  secret text not null,
+  intent_announcer text not null,
+  chain_src text not null,
+  chain_dst text not null,
+  token_src text not null,
+  token_dst text not null,
+  amount_src text not null,
+  swap_amount text not null,
+  timelock bigint not null,
+  escrow_creator text,
+  src_escrow_id text,
+  dst_order_id text,
+  resolvers text[],
+  resolvers_balance integer[],
+  src_escrow_status text not null,
+  dst_order_status text not null,
+  status text not null,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
 ---
 
 ## 6. Manual Testing Guide
